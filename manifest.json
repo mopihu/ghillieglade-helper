@@ -1,6 +1,6 @@
 {
 	"files": {
-		"config.json": "aa014142a0168313a765dd1211c4c605eb3f15107ab0e1a27ec472170a5fbeca",
+		"config.json": {"overwrite": false, "hash": "aa014142a0168313a765dd1211c4c605eb3f15107ab0e1a27ec472170a5fbeca"},
 		"index.js": "11269cb99fb5f292de113886d2ed2db25987325f1aa70a29599bda65fa6f4e6f",
 		"module.json": "bd77971b269fe3d099c9a92d748afd14f3299755a6541a5e8f53c8ad50c9db4d"
 	},

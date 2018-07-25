@@ -1,59 +1,68 @@
 const Command = require('command');
 const Vec3 = require('tera-vec3');
+const GameState = require('tera-game-state');
 
 module.exports = function GhilliegladeHelper(dispatch) {
-  const command = Command(dispatch);
+	const command = Command(dispatch);
+	const game = GameState(dispatch);
 
-  const ghillieSpawn = new Vec3(54997, 116171, 4517);
-  const ghillieBridge = new Vec3(52227, 117334, 4386);
-  const velikaSpawn = new Vec3(-481, 6301, 1956);
-  const velikaBank = new Vec3(-341, 8665, 2180);
+	const chestIds = [81341, 81342];
+	const data = {
+		9713: {
+			spawn: new Vec3(54997, 116171, 4517),
+			redirect: new Vec3(52227, 117334, 4386),
+			w: 1.6
+		},
+		7005: {
+			spawn: new Vec3(-481, 6301, 1956),
+			redirect: new Vec3(-341, 8665, 2180),
+			w: -0.96
+		}
+	};
 
-  const chestIds = [81341, 81342];
+	let enabled = true;
+	let reset = false;
 
-  let enabled = true;
-  let canReset = false;
-  let currentZone;
+	game.me.on('change_zone', (zone) => {
+		if (!enabled) return;
+		if (zone == 9714 && reset) {
+			dispatch.toServer('C_RESET_ALL_DUNGEON', 1, {});
+			reset = false;
+			command.message('Ghillieglade reset.');
+		}
+	});
 
-  dispatch.hook('S_LOAD_TOPO', 3, event => {
-    currentZone = event.zone;
-    if (enabled && currentZone == 9714 && canReset) {
-      dispatch.toServer('C_RESET_ALL_DUNGEON', 1, {});
-      canReset = false;
-      command.message('Ghillieglade reset.');
-    }
-  });
+	dispatch.hook('S_SPAWN_ME', 3, event => {
+		if (!enabled || !data[game.me.zone]) return;
+		if (event.loc.equals(data[game.me.zone].spawn)) {
+			event.loc = data[game.me.zone].redirect;
+			event.w = data[game.me.zone].w;
+		}
+		return true;
+	});
 
-  dispatch.hook('S_SPAWN_ME', 2, event => {
-    if (enabled && currentZone == 9713 && event.loc.equals(ghillieSpawn)) {
-      event.loc = ghillieBridge;
-      event.w = 1.6;
-    } else if (enabled && currentZone == 7005 && event.loc.equals(velikaSpawn)) {
-      event.loc = velikaBank;
-    }
-    return true;
-  });
+	dispatch.hook('S_SPAWN_NPC', 8, event => {
+		if (!enabled) return;
+		if (event.huntingZoneId == 713 && chestIds.includes(event.templateId)) {
+			reset = true;
+			command.message('Ghillieglade will be reset next time entering Velik Sanctuary.');
+		}
+	});
 
-  dispatch.hook('S_SPAWN_NPC', 8, event => {
-    if (enabled && event.huntingZoneId == 713 && chestIds.includes(event.templateId)) {
-      canReset = true;
-      command.message('Ghillieglade will be reset next time entering Velik Sanctuary.');
-    }
-  });
+	dispatch.hook('C_RESET_ALL_DUNGEON', 1, event => {
+		if (!enabled) return;
+		if (game.me.zone == 9713) {
+			reset = false;
+			command.message('Ghillieglade was reset manually.');
+		}
+	});
 
-  dispatch.hook('C_RESET_ALL_DUNGEON', 1, event => {
-    if (enabled && currentZone == 9713) {
-      canReset = false;
-      command.message('Ghillieglade was reset manually.');
-    }
-  });
+	command.add('ggh', () => {
+		enabled = !enabled;
+		command.message('Ghillieglade Helper ' + enabled ? 'enabled.' : 'disabled.');
+	});
 
-  command.add('ggh', () => {
-    enabled = !enabled;
-    command.message(enabled ? 'Ghillieglade Helper enabled.' : 'Ghillieglade Helper disabled.');
-  });
-
-  this.destructor = function() {
-    command.remove('ggh');
-  };
+	this.destructor = function() {
+		command.remove('ggh');
+	};
 };

@@ -22,7 +22,7 @@ module.exports = function GhilliegladeHelper(mod) {
   mod.game.me.on('change_zone', (zone) => {
     if (!enabled) return;
     if (zone == 9714 && reset) {
-      mod.toServer('C_RESET_ALL_DUNGEON', 1, {});
+      mod.send('C_RESET_ALL_DUNGEON', 1, {});
       reset = false;
       mod.command.message('Ghillieglade has been reset.');
     }

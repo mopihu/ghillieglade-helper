@@ -1,12 +1,7 @@
-const Command = require('command');
 const Vec3 = require('tera-vec3');
-const GameState = require('tera-game-state');
 const config = require('./config.json');
 
-module.exports = function GhilliegladeHelper(dispatch) {
-  const command = Command(dispatch);
-  const game = GameState(dispatch);
-
+module.exports = function GhilliegladeHelper(mod) {
   const chestIds = [81341, 81342];
   const data = {
     9713: {
@@ -24,46 +19,51 @@ module.exports = function GhilliegladeHelper(dispatch) {
   let enabled = config.enabled || true;
   let reset = false;
 
-  game.me.on('change_zone', (zone) => {
+  mod.game.me.on('change_zone', (zone) => {
     if (!enabled) return;
     if (zone == 9714 && reset) {
-      dispatch.toServer('C_RESET_ALL_DUNGEON', 1, {});
+      mod.toServer('C_RESET_ALL_DUNGEON', 1, {});
       reset = false;
-      command.message('Ghillieglade has been reset.');
+      mod.command.message('Ghillieglade has been reset.');
     }
   });
 
-  dispatch.hook('S_SPAWN_ME', 3, event => {
-    if (!enabled || !data[game.me.zone]) return;
-    if (event.loc.equals(data[game.me.zone].spawn)) {
-      event.loc = data[game.me.zone].redirect;
-      event.w = data[game.me.zone].w;
+  mod.hook('S_SPAWN_ME', 3, event => {
+    if (!enabled || !data[mod.game.me.zone]) return;
+    if (event.loc.equals(data[mod.game.me.zone].spawn)) {
+      event.loc = data[mod.game.me.zone].redirect;
+      event.w = data[mod.game.me.zone].w;
     }
     return true;
   });
 
-  dispatch.hook('S_SPAWN_NPC', 8, event => {
+  mod.hook('S_SPAWN_NPC', 9, event => {
     if (!enabled) return;
     if (event.huntingZoneId == 713 && chestIds.includes(event.templateId)) {
       reset = true;
-      command.message('Ghillieglade will be reset next time entering Velik Sanctuary.');
+      mod.command.message('Ghillieglade will be reset next time entering Velik Sanctuary.');
     }
   });
 
-  dispatch.hook('C_RESET_ALL_DUNGEON', 1, event => {
+  mod.hook('C_RESET_ALL_DUNGEON', 1, event => {
     if (!enabled) return;
-    if (game.me.zone == 9713) {
+    if (mod.game.me.zone == 9713) {
       reset = false;
-      command.message('Ghillieglade was reset manually.');
+      mod.command.message('Ghillieglade was reset manually.');
     }
   });
 
-  command.add('ggh', () => {
-    enabled = !enabled;
-    command.message('Ghillieglade Helper ' + enabled ? 'enabled.' : 'disabled.');
-  });
+  mod.command.add('ggh', {
+    $default() {
+      mod.command.message('Usage: /8 ggh - Turn module on/off.');
+    },
+    $none() {
+      enabled = !enabled;
+      mod.command.message(enabled ? 'Module enabled.' : 'Module disabled.');
+    },
+  })
 
   this.destructor = function() {
-    command.remove('ggh');
+    mod.command.remove('ggh');
   };
 };

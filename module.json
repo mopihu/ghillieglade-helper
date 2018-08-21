@@ -1,5 +1,8 @@
 {
-	"disableAutoUpdate": false,
-	"servers": ["https://raw.githubusercontent.com/mopihu/ghillieglade-helper/master/"],
-	"supportUrl": ""
+  "disableAutoUpdate": false,
+  "options": {
+    "niceName": "Ghillieglade-Helper"
+  },
+  "servers": ["https://raw.githubusercontent.com/mopihu/ghillieglade-helper/master/"],
+  "supportUrl": ""
 }

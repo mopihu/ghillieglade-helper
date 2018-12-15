@@ -37,7 +37,7 @@ module.exports = function GhilliegladeHelper(mod) {
     return true;
   });
 
-  mod.hook('S_SPAWN_NPC', 9, event => {
+  mod.hook('S_SPAWN_NPC', 10, event => {
     if (!enabled) return;
     if (event.huntingZoneId == 713 && chestIds.includes(event.templateId)) {
       reset = true;
